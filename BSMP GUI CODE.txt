@@ -1,0 +1,264 @@
+#IMPORTING NECESSARY PACKAGES
+import numpy as np#array/matrix operation
+import pandas as pd#for handling dataframes
+import matplotlib.pyplot as plt#visualizations
+import seaborn as sns#advanced visualis
+import streamlit as st
+
+#st.error('[info]all packages loaded successfully!')
+
+            # 1.DATA COLLECCTION
+data = pd.read_csv(r"C:\Users\praji\OneDrive\Documents\train.csv")
+#st.info("[info] data loaded successfully")
+#st.info("ACTUAL DATA SET IS :")
+
+         # 2.DATA PRE-PROCESSING
+#st.info(data.columns[data.isna().any()])
+#st.info("AFTER DOING NaN:")
+
+
+# #replacing the NaN values in Item_Weight columns with mean of Item_Weight
+data['Item_Weight'] = data['Item_Weight'].replace(0, np.NaN)
+data['Item_Weight'].fillna(data['Item_Weight'].mean(), inplace = True)
+
+#replacing the NaN values in Outlet_Size and Item_Outlet_Sales columns with mode of Outlet_Size and Item_Outlet_Sales
+data['Outlet_Size'].fillna(data['Outlet_Size'].mode()[0], inplace = True)
+
+data['Item_Outlet_Sales'] = data['Item_Outlet_Sales'].replace(0, np.NaN)
+data['Item_Outlet_Sales'].fillna(data['Item_Outlet_Sales'].mode()[0], inplace = True)
+
+Item_Fat_Content_unique = data['Item_Fat_Content'].unique().tolist()
+Item_Fat_Content_index = np.arange(1, len(Item_Fat_Content_unique) + 1, 1)
+Item_Fat_Content_to_num = {i: j for i, j in zip(Item_Fat_Content_unique, Item_Fat_Content_index)}
+
+data['Item_Fat_Content'] = data['Item_Fat_Content'].map(Item_Fat_Content_to_num)
+
+Item_Type_unique = data['Item_Type'].unique().tolist()
+Item_Type_index = np.arange(1, len(Item_Type_unique) + 1, 1)
+Item_Type_to_num = {i: j for i, j in zip(Item_Type_unique, Item_Type_index)}
+
+data['Item_Type'] = data['Item_Type'].map(Item_Type_to_num)
+
+Outlet_Identifier_unique = data['Outlet_Identifier'].unique().tolist()
+Outlet_Identifier_index = np.arange(1, len(Outlet_Identifier_unique) + 1, 1)
+Outlet_Identifier_to_num = {i: j for i, j in zip(Outlet_Identifier_unique, Outlet_Identifier_index)}
+
+data['Outlet_Identifier'] = data['Outlet_Identifier'].map(Outlet_Identifier_to_num)
+
+Outlet_Size_unique = data['Outlet_Size'].unique().tolist()
+Outlet_Size_index = np.arange(1, len(Outlet_Size_unique) + 1, 1)
+Outlet_Size_to_num = {i: j for i, j in zip(Outlet_Size_unique, Outlet_Size_index)}
+
+data['Outlet_Size'] = data['Outlet_Size'].map(Outlet_Size_to_num)
+
+Outlet_Location_Type_unique = data['Outlet_Location_Type'].unique().tolist()
+Outlet_Location_Type_index = np.arange(1, len(Outlet_Location_Type_unique) + 1, 1)
+Outlet_Location_Type_to_num = {i: j for i, j in zip(Outlet_Location_Type_unique, Outlet_Location_Type_index)}
+
+data['Outlet_Location_Type'] = data['Outlet_Location_Type'].map(Outlet_Location_Type_to_num)
+
+Outlet_Type_unique = data['Outlet_Type'].unique().tolist()
+Outlet_Type_index = np.arange(1, len(Outlet_Type_unique) + 1, 1)
+Outlet_Type_to_num = {i: j for i, j in zip(Outlet_Type_unique, Outlet_Type_index)}
+
+data['Outlet_Type'] = data['Outlet_Type'].map(Outlet_Type_to_num)
+
+# segregate data  into features and target
+x = data[['Item_Fat_Content','Item_Type','Outlet_Identifier','Outlet_Size','Outlet_Location_Type','Outlet_Type']].values  # choosing input col
+y = data['Item_Outlet_Sales'].values  # choosing output col
+#st.error('[info]data segragated to x and y successfuly')
+
+# SPLITTING DATA INTO TRAIN & TEST
+from sklearn.model_selection import train_test_split
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+# st.info('[info]data split into to train and test partitions successfully')
+
+# st.error('[info] x shape is :',x.shape)
+# st.error('x_train shape is :',x_train.shape)
+# st.error('x_test shape is :',x_test.shape)
+
+# BUILDING THE GUI
+import streamlit as st  # to build gui webpage
+from streamlit_option_menu import option_menu  # for option menu
+
+st.title('INTEGRATION GUI with ML MODELS')  # setting title of webpage
+
+#Item_Identifier = st.number_input('ENTER ITEM IDENTIFIER', step=1)
+#Item_Weight = st.number_input('ENTER ITEM WEIGHT', step=1)
+Item_Fat_Content = st.number_input('ENTER ITEM FAT CONTENT', step=1)
+#Item_Visibility = st.number_input('ENTER ITEM VISIBILITY', step=1)
+Item_Type = st.number_input('ENTER ITEM TYPE', step=1)
+#Item_MRP = st.number_input('ENTER ITEM MRP', step=1)
+Outlet_Identifier = st.number_input('ENTER OUTLET IDENTIFIER', step=1)
+#Outlet_Establishment_Year = st.number_input('ENTER OUTLET ESTABLISHMENT YEAR', step=1)
+Outlet_Size = st.number_input('ENTER OUTLET SIZE', step=1)
+Outlet_Location_Type = st.number_input('ENTER OUTLET LOCATION TYPE', step=1)
+Outlet_Type = st.number_input('ENTER OUTLET TYPE', step=1)
+#Outlet_Years = st.number_input('ENTER OUTLET YEARS', step=1)
+
+new_user_input = [[ Item_Fat_Content,Item_Type, Outlet_Identifier,
+      Outlet_Size, Outlet_Location_Type, Outlet_Type, ]]
+
+with st.sidebar:  # ading option menu to sidebar
+    model_selection = option_menu('SELECT A MODEL', options=['RIDGE REGULARIZATION','LINEAR REGRESSION','XGBOOST REGRESSION','RANDOM FOREST','KNN','LASSO REGULARIZATION'])
+
+submit_button = st.button("SUBMIT")
+if submit_button:
+
+    if model_selection == 'RIDGE REGULARIZATION':
+        #st.success('this is ridge regularization')
+        # 3a. MODEL TRAINING
+
+        from sklearn.linear_model import Ridge
+        from sklearn.metrics import mean_squared_error,mean_absolute_error
+        from sklearn.metrics import r2_score
+
+        model = Ridge()
+        model.fit(x_train, y_train)
+
+        #3b.MODEL EVALUATION
+
+        # predicting the  test set results
+        y_pred = model.predict(x_test)
+        st.info(y_pred)
+
+        # finding the mean squared error and r2
+        mse = mean_squared_error(y_test, y_pred)
+        st.error(f'RMSE ={np.sqrt(mse)}')
+        st.warning('r2 score: %.2f' % r2_score(y_test, y_pred))
+        mae = mean_absolute_error(y_test, y_pred)
+        st.info(f'MAE={mae}')
+
+        model_new_output = model.predict(new_user_input)
+        st.success(model_new_output[0])
+
+    if model_selection == 'LINEAR REGRESSION':
+        # st.success('this is linear regression')
+        # 4a. MODEL TRAINING
+        from sklearn.linear_model import LinearRegression
+        from sklearn.metrics import mean_squared_error,mean_absolute_error
+        from sklearn.metrics import r2_score
+
+        model = LinearRegression()
+        model.fit(x_train, y_train)
+
+        # 4b.MODEL EVALUATION
+
+        # predicting the  test set results
+        y_pred = model.predict(x_test)
+        st.info(y_pred)
+
+        # finding the mean squared error and r2_score
+        mse = mean_squared_error(y_test, y_pred)
+        st.error(f'RMSE :{np.sqrt(mse)}')
+        st.warning('r2 score: %.2f' % r2_score(y_test, y_pred))
+        mae = mean_absolute_error(y_test,y_pred)
+        st.info(f'MAE={mae}')
+
+        model_new_output = model.predict(new_user_input)
+        st.success(model_new_output[0])
+
+    if model_selection == 'XGBOOST REGRESSION':
+        # st.success('this is xgboost regression')
+        # 5a. MODEL TRAINING
+        from sklearn.ensemble import GradientBoostingRegressor
+        from sklearn.metrics import mean_squared_error, mean_absolute_error
+        from sklearn.metrics import r2_score
+
+        model = GradientBoostingRegressor()
+        model.fit(x_train, y_train)
+
+        # 5b.MODEL EVALUATION
+
+        # predicting the test set results
+        y_pred = model.predict(x_test)
+        st.info(y_pred)
+
+        # finding the mean squared error and r2_score
+        mse = mean_squared_error(y_test, y_pred)
+        st.error(f'RMSE : {np.sqrt(((y_test - y_pred) ** 2).sum() / len(y_test))}')
+        st.warning('r2 score: %.2f' % r2_score(y_test, y_pred))
+        mae = mean_absolute_error(y_test, y_pred)
+        st.info(f'MAE={mae}')
+
+        model_new_output = model.predict(new_user_input)
+        st.success(model_new_output[0])
+
+    if model_selection == 'RANDOM FOREST':
+        # st.success('this is random forest')
+        # 6a. MODEL TRAINING
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.metrics import mean_squared_error,mean_absolute_error
+        from sklearn.metrics import r2_score
+
+        model = RandomForestRegressor(n_estimators=100)
+        model.fit(x_train, y_train)
+
+        # 6b.MODEL EVALUATION
+
+        # predicting the  test set results
+        y_pred = model.predict(x_test)
+        st.info(y_pred)
+
+        # finding the mean squared error and r2_score
+        mse = mean_squared_error(y_test, y_pred)
+        st.error(f'RMSE :{np.sqrt(mse)}')
+        st.warning('r2_score : %.2f' % r2_score(y_test, y_pred))
+        mae = mean_absolute_error(y_test, y_pred)
+        st.info(f'MAE={mae}')
+
+        model_new_output = model.predict(new_user_input)
+        st.success(model_new_output[0])
+
+    if model_selection == 'KNN':
+        # st.success('this is knn')
+        # 7a. MODEL TRAINING
+        from sklearn.neighbors import KNeighborsRegressor
+        from sklearn.metrics import mean_squared_error,mean_absolute_error
+        from sklearn.metrics import r2_score
+
+        model = KNeighborsRegressor()
+        model.fit(x_train, y_train)
+
+        # 7b.MODEL EVALUATION
+
+        # predicting the x test results
+        y_pred = model.predict(x_test)
+        st.info(y_pred)
+
+        # Calculating the RMSE Score
+        mse = mean_squared_error(y_test, y_pred)
+        st.error(f'RMSE :{np.sqrt(mse)}')
+        st.warning('r2_score : %.2f' % r2_score(y_test, y_pred))
+        mae = mean_absolute_error(y_test, y_pred)
+        st.info(f'MAE={mae}')
+
+        model_new_output = model.predict(new_user_input)
+        st.success(model_new_output[0])
+
+    if model_selection == 'LASSO REGULARIZATION':
+        # st.success('this is lasso regularization')
+        # 8a. MODEL TRAINING
+        from sklearn.linear_model import Lasso
+        from sklearn.metrics import mean_squared_error,mean_absolute_error
+        from sklearn.metrics import r2_score
+
+        model = Lasso()
+        model.fit(x_train, y_train)
+
+        # 8b.MODEL EVALUATION
+
+        # predicting the  test set results
+        y_pred = model.predict(x_test)
+        st.info(y_pred)
+
+        # finding the mean squared error and r2_score
+        mse = mean_squared_error(y_test, y_pred)
+        st.error(f'RMSE :{np.sqrt(mse)}')
+        st.warning('r2_score : %.2f' % r2_score(y_test, y_pred))
+        mae = mean_absolute_error(y_test, y_pred)
+        st.info(f'MAE={mae}')
+
+        model_new_output = model.predict(new_user_input)
+        st.success(model_new_output[0])
