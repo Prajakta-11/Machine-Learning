@@ -1,0 +1,2 @@
+#Big Mart Sales using Machine Learning
+Machine learning to predict sales in Big Mart shopping centers. By analyzing various attributes, the study found that a medium-sized location outperformed others. The findings highlight the need for smart sales forecasting and the effectiveness of algorithms like Linear Regression, Random Forest, Decision Trees, and XGBoost. These tools can assist in understanding consumer behavior and developing targeted marketing strategies
